@@ -1,0 +1,53 @@
+<html>
+<div id="chartContainer">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.7.4/d3.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-dsv/1.0.5/d3-dsv.js"></script>
+  <script src="http://dimplejs.org/dist/dimple.v2.3.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  <script type="text/javascript">
+
+	 // Pass in an axis object and an interval.
+	 var cleanAxis = function (axis, oneInEvery) {
+			 // This should have been called after draw, otherwise do nothing
+			 if (axis.shapes) {
+					 var del = false;
+					 // If there is an interval set
+					 if (oneInEvery > 1) {
+							 // Operate on all the axis text
+							 axis.shapes.selectAll("text")
+							 .each(function (d) {
+									 // Remove all but the nth label
+									 if (del % oneInEvery !== 0) {
+											 this.remove();
+											 // Find the corresponding tick line and remove
+											 axis.shapes.selectAll("line").each(function (d2) {
+													 if (d === d2) {
+															 this.remove();
+													 }
+											 });
+									 }
+									 del += 1;
+							 });
+					 }
+			 }
+	 };
+
+    var svg = dimple.newSvg("#chartContainer", 1590, 1400);
+
+		// delt Gives the time step in picoseconds (0.001).
+		var delt = 0.0005
+
+    d3.tsv("./ex2_mdrun.dat", function (data) {
+			data = _.map(data, function(d) { d["ID"] = d["ID"] * delt; return d});
+      var myChart = new dimple.chart(svg, data);
+      myChart.setBounds(60, 30, 930, 830);
+      var x = myChart.addCategoryAxis("x", "ID");
+			x.tickFormat = ".4f"
+      myChart.addMeasureAxis("y", "instant_temp");
+      var s = myChart.addSeries(null, dimple.plot.line);
+      myChart.draw();
+			cleanAxis(x, 5);
+    });
+  </script>
+</div>
+</html>
